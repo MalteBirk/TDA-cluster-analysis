@@ -49,7 +49,13 @@ gunzip genomes/*
 
 mkdir cds_fasta_rename/
 cd cds_fasta
-for i in *; do echo $i; suge=$(head -n1 ../genomes/$(echo $i | sed 's/cds_from_//g')); suge2=$(echo $suge | sed -r 's/>([a-zA-Z0-9._]* [a-zA-Z0-9]* [a-zA-Z0-9_\-.]* [a-zA-Z0-9_\-.]* [a-zA-Z0-9_\-.]*) .*/\1/g' | sed 's/ /_/g'); echo $suge2; bbrename.sh in=$i out=../cds_fasta_rename/$i prefix=$suge2 addprefix=t; done
+for i in *; do 
+	echo $i; 
+	suge=$(head -n1 ../genomes/$(echo $i | sed 's/cds_from_//g')); 
+	suge2=$(echo $suge | sed -r 's/>([a-zA-Z0-9._]* [a-zA-Z0-9]* [a-zA-Z0-9_\-.]* [a-zA-Z0-9_\-.]* [a-zA-Z0-9_\-.]*) .*/\1/g' | sed 's/ /_/g'); 
+	echo $suge2; 
+	bbrename.sh in=$i out=../cds_fasta_rename/$i prefix=$suge2 addprefix=t; 
+done
 cd ..	
 
 

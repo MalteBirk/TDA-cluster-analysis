@@ -23,8 +23,8 @@ class MainScript:
         extractor_object = FileExtractor(gene)
         extractor_object.extract_reference_genes()
     
-    def blast_analysis(self):
-        blast_object = BlastAnalysis()
+    def blast_analysis(self, gene):
+        blast_object = BlastAnalysis(gene)
         blast_object.gene_blast()
 
 
