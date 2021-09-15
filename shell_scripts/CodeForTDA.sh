@@ -89,6 +89,7 @@ for i in tdaBlast/*; do if [[ $(wc -l <$i) -lt 4 ]]; then echo $i;  cat $i; fi; 
 mkdir genes
 mkdir aligns
 
+# Hiver du generne ud her?
 for tda in tdaA tdaB tdaC tdaD tdaE; do
 	echo $tda
 	for blast in tdaBlast/*; do

@@ -4,35 +4,52 @@ import configparser
 
 from file_extractor import FileExtractor
 from blast_analysis import BlastAnalysis
+from housekeeping_analysis import HousekeepingAnalysis
 
 config_parser = configparser.ConfigParser()
 config_parser.read("../config.ini")
 
 class MainScript:
 
-    def __init__(self, test):
-        self.test = test
-    
-    def gbk_splitter_script(self):
+    def __init__(self, name):
+    # Have some argparses here?
+        self.folder_name = name
+
+    def initator(self):
+        self._gbk_splitter_script()
+        # Extract files and make directories
+        # NOTE: Make it possible to have multiple config files and parse them on the command line.
+        for gene in config_parser.sections():
+            self.folder_name = config_parser.get(gene, "gene_name") + "_" \
+                               + config_parser.get(gene, "organism_list").replace(",","_")
+            #self._file_extractor(gene)
+            #self._blast_analysis(gene)
+            self._housekeeping_analysis(gene)
+
+    def _gbk_splitter_script(self):
         script_directory = os.listdir()
         if "seqIO_extract.py" not in script_directory:
             subprocess.run(["wget", 
             "https://raw.githubusercontent.com/davised/seqIO_extract/master/seqIO_extract.py"])
         
-    def file_extractor(self, gene):
-        extractor_object = FileExtractor(gene)
+    def _file_extractor(self, gene):
+        extractor_object = FileExtractor(gene, self.folder_name)
         extractor_object.extract_reference_genes()
     
-    def blast_analysis(self, gene):
-        blast_object = BlastAnalysis(gene)
-        blast_object.gene_blast()
+    def _blast_analysis(self, gene):
+        blast_object = BlastAnalysis(gene, self.folder_name)
+        #blast_object.gene_blast()
+        #blast_object.protein_blast()
+        blast_object.extract_genes()
+        blast_object.extract_protein()
+    
+    def _housekeeping_analysis(self, gene):
+        housekeeping_object = HousekeepingAnalysis(gene, self.folder_name)
+        housekeeping_object.extract_genes()
+        housekeeping_object.extract_proteins()
 
 
-test_object = MainScript(".")
+if __name__ == "__main__":
+    test_object = MainScript(" ")
+    test_object.initator()
 
-test_object.gbk_splitter_script()
-# Extract files and make directories
-# NOTE: Make it possible to have multiple config files and parse them on the command line.
-for sect in config_parser.sections():
-    test_object.file_extractor(sect)
-    test_object.blast_analysis(sect)
