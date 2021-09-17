@@ -13,7 +13,7 @@ class FileExtractor:
         self.folder_name = folder_name
 
     def extract_reference_genes(self):
-        self.reference_gene = "../"+"reference"+self.gene + "/"
+        self.reference_gene = "../Results/" + config_parser.get(self.gene, "gene_name") + "/" + "reference"+self.gene + "/"
         url = config_parser.get(self.gene, "mibig_url")
         filename = url.split("/")[-1]
         gene_name = filename.split(".")[0]
@@ -24,11 +24,12 @@ class FileExtractor:
         
         # Get reference gene.
         subprocess.run(["wget", url, "-P", self.reference_gene])
-
         # NOTE: Make it remove the additional reference gene after script has run through.
         file = subprocess.run(["python3", "seqIO_extract.py", 
                                 "--fna", self.reference_gene + filename, "all"], 
                                 capture_output = True)
+        print("python3", "seqIO_extract.py", 
+                                "--fna", self.reference_gene + filename, "all")
         self._fna_file_writer(gene_name, file)
 
         file = subprocess.run(["faidx", self.reference_gene + gene_name + ".fna", 
@@ -84,35 +85,43 @@ class FileExtractor:
     def _ncbi_download(self):      
         print("downloading cds from", \
             config_parser.get(self.gene, "organism_list").replace(","," "))
+        cds_folder_name = self.folder_name.split("/")
+        cds_folder_name[-1] = "cds_fasta" + "_" + cds_folder_name[-1]
+        self.cds_folder_name = "/".join(cds_folder_name)
+
         subprocess.run(["ncbi-genome-download", "-p",
                         config_parser.get(self.gene, "ncbi_parallel"), 
                         "-F", "cds-fasta", "-l", "all", 
                         "--flat-output", "-g", config_parser.get(self.gene, "organism_list"), 
-                        "-o", "cds_fasta" + "_" + self.folder_name, "bacteria"])
-        subprocess.run(["gunzip", "-r", "cds_fasta" + "_" + self.folder_name])
+                        "-o", self.cds_folder_name, "bacteria"])
+        # Find a way to always overwrite?
+        subprocess.run(["gunzip", "-r", self.cds_folder_name])
 
+        genomes_folder_name = self.folder_name.split("/")
+        genomes_folder_name[-1] = "genomes" + "_" + genomes_folder_name[-1]
+        self.genomes_folder_name = "/".join(genomes_folder_name)
         print("downloading whole genomes from", \
             config_parser.get(self.gene, "organism_list").replace(","," "))
         subprocess.run(["ncbi-genome-download", "-p",
                 config_parser.get(self.gene, "ncbi_parallel"), 
                 "-F", "fasta", "-l", "all", 
                 "--flat-output", "-g", config_parser.get(self.gene, "organism_list"), 
-                "-o", "genomes" + "_" + self.folder_name, "bacteria"])
-        subprocess.run(["gunzip", "-r", "genomes" + "_" + self.folder_name])
+                "-o", self.genomes_folder_name, "bacteria"])
+        subprocess.run(["gunzip", "-r", self.genomes_folder_name])
 
     def _coding_sequence_processing(self):
-        self.cds_list = os.listdir("cds_fasta" + "_" + self.folder_name)
-        genome_list = os.listdir("genomes" + "_" + self.folder_name)
+        self.cds_list = os.listdir(self.cds_folder_name)
+        genome_list = os.listdir(self.genomes_folder_name)
         for i in range(0, len(self.cds_list)):
             genome_name = self.cds_list[i].split("_", 3)
             genome_name = "_".join(genome_name[0:3])
             # Needs to seek here if the plasmid should be included.
             if genome_list[i].startswith(genome_name):
-                genome_file = open("genomes" + "_" + self.folder_name + "/" + genome_list[i])
+                genome_file = open(self.genomes_folder_name + "/" + genome_list[i])
                 # Some highly weird names sometime. Not a good overall pattern anywhere.
                 strain_name = genome_file.readline().split(" ", 1)[1].split(",")[0]
                 strain_name = strain_name.replace(" ","_")
-            cds_filename = "cds_fasta" + "_" + self.folder_name + "/" + self.cds_list[i]
+            cds_filename = self.cds_folder_name + "/" + self.cds_list[i]
             # Uses print to change the lines
             for line in fileinput.input(cds_filename, inplace = True):
                 line = line.rstrip('\r\n')
@@ -122,23 +131,18 @@ class FileExtractor:
                     print(line)
 
     def _translate_coding_sequences(self):
-        self.cds_list = os.listdir("cds_fasta" + "_" + self.folder_name)
-        if os.path.exists("protein_cds_fasta" + "_" + self.folder_name):
+        self.cds_list = os.listdir(self.cds_folder_name)
+        protein_folder_name = self.folder_name.split("/")
+        protein_folder_name[-1] = "protein_cds_fasta" + "_" + protein_folder_name[-1]
+        self.protein_folder_name = "/".join(protein_folder_name)
+        
+        if os.path.exists(self.protein_folder_name):
             pass
         else:
-            os.mkdir("protein_cds_fasta" + "_" + self.folder_name)
+            os.mkdir(self.protein_folder_name)
         for cds in self.cds_list:
             subprocess.run(["transeq", "-sequence",
-                "cds_fasta" + "_" + self.folder_name + "/" + cds, 
+                self.cds_folder_name + "/" + cds, 
                 "-trim", "boolean", "-sformat", "pearson",
-                "-outseq", "protein_cds_fasta" + "_" + self.folder_name + "/" + cds], 
+                "-outseq", self.protein_folder_name + "/" + cds], 
                 capture_output=True)
-
-# ncbi-genome-download -p 40 -F s-fasta -l all  --flat-output -g Phaeobacter,Epibacterium -o cds_fasta bacteria
-
-#ncbi-genome-download -p 40 -F cds-fasta -l all  --flat-output -g Phaeobacter,Epibacterium,Pseudovibrio,Paracoccus,Stappia -o cds_fasta bacteria
-#gunzip cds_fasta/*
-
-#get all genomes, only for naming purposes
-#ncbi-genome-download -p 40 -F fasta -l all  --flat-output -g Phaeobacter,Epibacterium,Pseudovibrio,Paracoccus,Stappia -o genomes bacteria
-#gunzip genomes/*
