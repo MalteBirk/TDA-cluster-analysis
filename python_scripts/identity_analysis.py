@@ -1,6 +1,7 @@
 import os
 import configparser
 import subprocess
+import matplotlib.pyplot as plt
 
 from blast_analysis import BlastAnalysis
 
@@ -18,6 +19,7 @@ class IdentityAnalysis:
         self.cds_blast_folder = self.blast_functions_object.directory_formatter(self.gene + "_Nucleotide_Blast")
         self.reference_folder = self.blast_functions_object.directory_formatter("reference" + self.gene)
         self.identity_analysis_folder = self.blast_functions_object.directory_formatter("reference" + self.gene)
+        self.figures_folder = self.blast_functions_object.directory_formatter(self.gene + "_figures")
 
     def blast_to_length_comparison(self):
         self.blast_functions_object.check_directory_path(self.identity_analysis_folder)
@@ -34,27 +36,39 @@ class IdentityAnalysis:
             else:
                 seq = line.rstrip()
                 self.identity_and_length(name, len(seq), self.cds_blast_folder)
-    
+        
+        if os.path.exists("info_data_frame"):
+            os.remove("info_data_frame")
+        self.blast_functions_object.check_directory_path(self.figures_folder)
+        information_file = open("R_information_file", "w")
+        information_file.write(self.figures_folder + "/")
+        os.chdir("../R_scripts")
+        #print(os.getcwd())
+        #list_of_files = os.listdir()
+        #print(list_of_files[0])
+        subprocess.call("./point_plot_and_histogram.R")
+        #os.system("C:/Workspace/TDA-cluster-analysis/R_scripts/point_plot_and_histogram.R")
+        
+        #current_working_directory = os.listdir(".")
+
+        #for file in current_working_directory:
+        #    if file.endswith("_data_frame") or file == "R_information_file":
+        #        os.remove(file)
+
     def identity_and_length(self, name, seq_length, folder):
-        self.identity_list = []
-        self.length_list = []
-        print(folder)
         blast_files = os.listdir(folder)
+        if os.path.exists(str(name[1:], "UTF-8") + "_data_frame"):
+            os.remove(str(name[1:], "UTF-8") + "_data_frame")
+        data_frame_file = open(str(name[1:], "UTF-8") + "_data_frame", "w")
         for file in blast_files:
-            blast_file = open(folder + "/" + file,"r")
+            blast_file = open(folder + "/" + file, "r")
             for blast_result in blast_file:
                 if blast_result.startswith(str(name[1:], "UTF-8")):
-                    # TODO: Fix this.
-                    print(blast_result.split("\t")[2])
-                    exit(1)
-                    try:
-                        identity = blast_result.split("\t")[2]
-                        length = (blast_result.split("\t")[3]/seq_length)*100
-                        self.identity_list.append(identity)
-                        self.length_list.append(length)
-                    except:
-                        print("Error")
-                    break
-        print(self.identity_list)
-        print(self.length_list)
-        # TODO: Plot with: https://matplotlib.org/stable/tutorials/introductory/pyplot.html
+                    identity = blast_result.split("\t")[2]
+                    length = (int(blast_result.split("\t")[3])/seq_length)*100
+                    # Expects it as the first name
+                    genus_name = blast_result.split("\t")[1].split("_")[0]
+                    # TODO: Look more in depth at this once more species start to emerge
+                    species_name = blast_result.split("\t")[1].split("|")[0]
+                    data_frame_file.write(file + "\t" + str(identity) + "\t" + str(length) + "\t" + genus_name + "\t" + species_name + "\n")
+        data_frame_file.close()
