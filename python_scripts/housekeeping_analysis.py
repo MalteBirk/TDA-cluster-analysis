@@ -51,7 +51,15 @@ class HousekeepingAnalysis:
                 infile = open(self.cds_folder + "/" + cds_file)
                 for line in infile:
                     if line.startswith(">"):
-                        gene_name = line.split(" ")[1]
+                        # Some genes don't have 
+                        try:
+                            gene_name = line.split(" ")[1]
+                        except:
+                            print(line)
+                            print(cds_file)
+                            count += 1
+                            continue
+                            #exit(1)
                         if gene_name.startswith("[gene="):
                             gene_name = gene_name.split("=")[1][:-1]
                             if gene_name in self.housekeeping_list:
@@ -64,7 +72,6 @@ class HousekeepingAnalysis:
                             flag = False
                     elif flag == True:
                         fs[housekeeping_number_list[file_position]].write(line)
-        
         finally:
             for f in fs:
                 f.close()

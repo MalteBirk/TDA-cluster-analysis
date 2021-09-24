@@ -1,23 +1,24 @@
-# Code from
-# https://vbaliga.github.io/verify-that-r-packages-are-installed-and-loaded/
+# In order to work with R 3.5
+packageurl<-"https://cran.r-project.org/src/contrib/Archive/nloptr/nloptr_1.2.1.tar.gz"
+if(!require(rstudioapi)){install.packages(packageurl, repos=NULL, type="source")}
+packages <- c("ggplot2", "ggpubr")
+# Function to check whether package is installed
+is.installed <- function(mypkg){
+  is.element(mypkg, installed.packages()[,1])
+}
+for(x in packages){
+  
+  if(!is.element(x, installed.packages()[,1]))
+    
+  {install.packages(x, repos="http://cran.fhcrc.org")
+    
+  } else {print(paste(x, " library already installed"))}
+  
+}
 
-packages = c("ggplot2", "rstudioapi")
-package.check <- lapply(
-  packages,
-  FUN = function(x) {
-    if (!require(x, character.only = TRUE)) {
-      install.packages(x, dependencies = TRUE)
-      library(x, character.only = TRUE)
-    }
-  }
-)
-
-library("rstudioapi")
 library("ggplot2")
 library("ggpubr")
-
-setwd(dirname(getActiveDocumentContext()$path))
-
+setwd(getwd())
 # Saves all data frames and information about where to write PNG's
 all_data_frames = list.files("../python_scripts", pattern = "data_frame")
 all_data_frames_list = as.list(strsplit(all_data_frames, '\\s+'))
@@ -47,6 +48,9 @@ for (name in all_data_frames_list){
     nrow = 2, 
     labels = "A"       # Label of the line plot
   ) 
-  ggsave(file=paste(result_path,name,".png",sep = ""), g) #saves g
+  figure_name = strsplit(name, split = "_")
+  figure_name <- sapply(figure_name, function(x) x[1:2])
+  figure_name = paste(figure_name[1],figure_name[2],sep = "_")
+  ggsave(file=paste(result_path,figure_name,"_identity_and_length_Rfig",".png",sep = ""), g) #saves g
 }
 

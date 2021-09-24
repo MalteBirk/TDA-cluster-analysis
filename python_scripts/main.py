@@ -33,7 +33,9 @@ class MainScript:
                                config_parser.get(gene, "gene_name") + "_" \
                                + config_parser.get(gene, "organism_list").replace(",","_")
             #self._file_extractor(gene)
+            #print("starting_blast_analysis")
             #self._blast_analysis(gene)
+            #print("extracting_housekeeping_genes")
             #self._housekeeping_analysis(gene)
             self._identity_analysis(gene)
 
@@ -61,8 +63,8 @@ class MainScript:
     
     def _identity_analysis(self, gene):
         identity_object = IdentityAnalysis(gene, self.folder_name)
-        identity_object.blast_to_length_comparison()
-
+        #identity_object.blast_to_length_comparison()
+        identity_object.tree_maker()
 
 
 if __name__ == "__main__":

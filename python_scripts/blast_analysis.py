@@ -17,12 +17,12 @@ class BlastAnalysis:
         self.cds_blast_folder = self.directory_formatter(gene + "_Nucleotide_Blast")
         self.cds_folder = self.directory_formatter("cds_fasta" + "_" + folder_name[-1])
         self.extracted_gene_folder = self.directory_formatter(gene + "_" + "Extracted_cds")
-        self.gene_align_folder = self.directory_formatter(gene + "_" + "Aligned_cds")
+        self.gene_align_folder = self.directory_formatter(gene + "_" + "aligned_cds")
         
         self.protein_blast_folder = self.directory_formatter(gene + "_" + "Protein_Blast")
         self.protein_cds_folder = self.directory_formatter("protein_cds_fasta" + "_" + folder_name[-1])
         self.extracted_protein_folder = self.directory_formatter(gene + "_" + "Extracted_protein_cds")
-        self.protein_align_folder = self.directory_formatter(gene + "_" + "Aligned_protein_cds")
+        self.protein_align_folder = self.directory_formatter(gene + "_" + "aligned_protein_cds")
 
     def gene_blast(self):
         #TDA_Nucleotide_Blast
@@ -50,7 +50,6 @@ class BlastAnalysis:
                 count += 1
                 os.remove(self.cds_blast_folder + "/" + file)
         print(count)
-        exit(1)
 
     def protein_blast(self):
 

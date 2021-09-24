@@ -11,6 +11,18 @@ class FileExtractor:
     def __init__(self, gene, folder_name):
         self.gene = gene
         self.folder_name = folder_name
+        
+        cds_folder_name = self.folder_name.split("/")
+        cds_folder_name[-1] = "cds_fasta" + "_" + cds_folder_name[-1]
+        self.cds_folder_name = "/".join(cds_folder_name)
+
+        genomes_folder_name = self.folder_name.split("/")
+        genomes_folder_name[-1] = "genomes" + "_" + genomes_folder_name[-1]
+        self.genomes_folder_name = "/".join(genomes_folder_name)
+
+        protein_folder_name = self.folder_name.split("/")
+        protein_folder_name[-1] = "protein_cds_fasta" + "_" + protein_folder_name[-1]
+        self.protein_folder_name = "/".join(protein_folder_name)
 
     def extract_reference_genes(self):
         self.reference_gene = "../Results/" + config_parser.get(self.gene, "gene_name") + "/" + "reference"+self.gene + "/"
@@ -85,9 +97,6 @@ class FileExtractor:
     def _ncbi_download(self):      
         print("downloading cds from", \
             config_parser.get(self.gene, "organism_list").replace(","," "))
-        cds_folder_name = self.folder_name.split("/")
-        cds_folder_name[-1] = "cds_fasta" + "_" + cds_folder_name[-1]
-        self.cds_folder_name = "/".join(cds_folder_name)
 
         subprocess.run(["ncbi-genome-download", "-p",
                         config_parser.get(self.gene, "ncbi_parallel"), 
@@ -110,8 +119,9 @@ class FileExtractor:
         subprocess.run(["gunzip", "-r", self.genomes_folder_name])
 
     def _coding_sequence_processing(self):
-        self.cds_list = os.listdir(self.cds_folder_name)
         genome_list = os.listdir(self.genomes_folder_name)
+        self.cds_list = os.listdir(self.cds_folder_name)
+        
         for i in range(0, len(self.cds_list)):
             genome_name = self.cds_list[i].split("_", 3)
             genome_name = "_".join(genome_name[0:3])
@@ -121,6 +131,7 @@ class FileExtractor:
                 # Some highly weird names sometime. Not a good overall pattern anywhere.
                 strain_name = genome_file.readline().split(" ", 1)[1].split(",")[0]
                 strain_name = strain_name.replace(" ","_")
+                strain_name = strain_name.strip()
             cds_filename = self.cds_folder_name + "/" + self.cds_list[i]
             # Uses print to change the lines
             for line in fileinput.input(cds_filename, inplace = True):
@@ -132,9 +143,6 @@ class FileExtractor:
 
     def _translate_coding_sequences(self):
         self.cds_list = os.listdir(self.cds_folder_name)
-        protein_folder_name = self.folder_name.split("/")
-        protein_folder_name[-1] = "protein_cds_fasta" + "_" + protein_folder_name[-1]
-        self.protein_folder_name = "/".join(protein_folder_name)
         
         if os.path.exists(self.protein_folder_name):
             pass
