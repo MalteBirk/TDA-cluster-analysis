@@ -39,10 +39,23 @@ class IdentityAnalysis:
         self._ref_gene_analyser(".faa", self.protein_blast_folder, "_protein")
 
     def tree_maker(self):
+        self.blast_functions_object.check_directory_path(self.tree_figures_folder)
+        # NOTE: Make functions?
         cds_aligns = os.listdir(self.gene_align_folder)
         for file in cds_aligns:
-            tree_file = subprocess.run(["fasttree", "-nt", self.gene_align_folder + "/" + file], capture_output = True)
-        print(tree_file)
+            tree_outfile = open(file.split(".")[0] + "_" + "tree" + ".tree", "wb")
+            tree_file = subprocess.run(["fasttree", "-nt", "-quiet", self.gene_align_folder + "/" + file], capture_output = True)
+            tree_outfile.write(tree_file.stdout)
+            tree_outfile.close()
+        self._R_tree_analysis()
+
+        housekeeping_aligns = os.listdir(self.aligned_path)
+        for file in housekeeping_aligns:
+            tree_outfile = open(file.split(".")[0] + "_" + "tree" + ".tree", "wb")
+            tree_file = subprocess.run(["fasttree", "-nt", "-quiet", self.aligned_path + "/" + file], capture_output = True)
+            tree_outfile.write(tree_file.stdout)
+            tree_outfile.close()
+        self._R_tree_analysis()
 
     def _ref_gene_analyser(self, file_ending, folder, info_type):
         # NOTE: Something off with tdaA for proteins!!!!
@@ -55,7 +68,7 @@ class IdentityAnalysis:
                 seq = line.rstrip()
                 self._identity_and_length(name, len(seq), folder, info_type)
         self._R_analysis()
-        
+
     def _identity_and_length(self, name, seq_length, folder, info_type):
         blast_files = os.listdir(folder)
         if os.path.exists(str(name[1:], "UTF-8") + "_data_frame"):
@@ -86,7 +99,7 @@ class IdentityAnalysis:
         information_file = open("R_information_file", "w")
         information_file.write(self.blast_identities_figures_folder + "/")
         # NOTE: Remove capture_output if you want to get messages from R.
-        subprocess.run(["Rscript", "../R_scripts/point_plot_and_histogram.R"], capture_output = True)
+        subprocess.run(["Rscript", "../R_scripts/point_plot_and_histogram.R"])
         
         current_working_directory = os.listdir(".")
         for file in current_working_directory:
@@ -95,4 +108,16 @@ class IdentityAnalysis:
             if file.endswith("_Rfig.png"):
                 os.rename(file, self.blast_identities_figures_folder + "/" + file)
     
-    
+    def _R_tree_analysis(self):
+        information_file = open("R_information_file", "w")
+        information_file.write(self.tree_figures_folder + "/")
+        
+        subprocess.run(["Rscript", "../R_scripts/tree_maker.R"])
+        
+        current_working_directory = os.listdir(".")
+        for file in current_working_directory:
+            # NOTE: Mute here if you want to look at tree files. Might be necessary to delete some information.
+            if file.endswith("_tree.tree") or file == "R_information_file":
+                os.remove(file)
+            if file.endswith("_Rfig.png"):
+                os.rename(file, self.tree_figures_folder + "/" + file)
