@@ -25,8 +25,8 @@ class IdentityAnalysis:
 
         self.gene_align_folder = self.blast_functions_object.directory_formatter(gene + "_" + "aligned_cds")
         self.protein_align_folder = self.blast_functions_object.directory_formatter(gene + "_" + "aligned_protein_cds")
-        self.aligned_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "aligned_housekeeping_genes")
-        self.aligned_protein_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "aligned_housekeeping_proteins")
+        self.aligned_housekeeping_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "aligned_housekeeping_genes")
+        self.aligned_housekeeping_protein_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "aligned_housekeeping_proteins")
 
     def blast_to_length_comparison(self):
         self.blast_functions_object.check_directory_path(self.identity_analysis_folder)
@@ -40,23 +40,48 @@ class IdentityAnalysis:
 
     def tree_maker(self):
         self.blast_functions_object.check_directory_path(self.tree_figures_folder)
-        # NOTE: Make functions?
-        cds_aligns = os.listdir(self.gene_align_folder)
-        for file in cds_aligns:
-            tree_outfile = open(file.split(".")[0] + "_" + "tree" + ".tree", "wb")
-            tree_file = subprocess.run(["fasttree", "-nt", "-quiet", self.gene_align_folder + "/" + file], capture_output = True)
+        self._tree_figure_writer(self.gene_align_folder, "-nt")
+        self._tree_figure_writer(self.protein_align_folder, None)
+        self._tree_figure_writer(self.aligned_housekeeping_path, "-nt")
+        self._tree_figure_writer(self.aligned_housekeeping_protein_path, None)
+
+    def _tree_figure_writer(self, folder, data_type):
+        alignments = os.listdir(folder)
+        for file in alignments:
+            if data_type == "-nt":
+                tree_outfile = open(file.split(".")[0] + "_" + "tree" + ".tree", "wb")
+                tree_file = subprocess.run(["fasttree", "-nt", "-quiet", folder + "/" + file], capture_output = True)
+            else:
+                tree_outfile = open(file.split(".")[0] + "Protein_" + "tree" + ".tree", "wb")
+                tree_file = subprocess.run(["fasttree", "-quiet", folder + "/" + file], capture_output = True)
             tree_outfile.write(tree_file.stdout)
             tree_outfile.close()
+        self._tree_data_wrangler()
         self._R_tree_analysis()
-
-        housekeeping_aligns = os.listdir(self.aligned_path)
-        for file in housekeeping_aligns:
-            tree_outfile = open(file.split(".")[0] + "_" + "tree" + ".tree", "wb")
-            tree_file = subprocess.run(["fasttree", "-nt", "-quiet", self.aligned_path + "/" + file], capture_output = True)
-            tree_outfile.write(tree_file.stdout)
-            tree_outfile.close()
-        self._R_tree_analysis()
-
+    
+    def _tree_data_wrangler(self):
+        current_directory = os.listdir()
+        for file in current_directory:
+            if file.endswith(".tree"):
+                # Genus name only
+                tree_file = open(file, "r")
+                for line in tree_file:
+                    all_data = line.split(",")
+                df_name = file.split("_")[0]
+                #os.remove(file)
+                filename = "".join(file.split(".")[:-1])
+                wrangled_tree_file = open(filename + ".wrangled", "w")
+                data_frame = open(df_name + ".tsv", "w")
+                for tree_info in all_data:
+                    name = "_".join(tree_info.split("_", 2)[:2])
+                    tree_value = tree_info.split(":", 1)[1]
+                    genus_name = name.replace(")","").replace("(","")
+                    if tree_value.endswith(";") or tree_value.endswith("\n"):
+                        wrangled_tree_file.write(name + ":" + tree_value)
+                    else: 
+                        wrangled_tree_file.write(name + ":" + tree_value + ",")
+                    data_frame.write(genus_name + "\t" + genus_name.split("_")[0] + "\n")
+    
     def _ref_gene_analyser(self, file_ending, folder, info_type):
         # NOTE: Something off with tdaA for proteins!!!!
         ref_gene = open(self.reference_folder + "/" + self.filename + file_ending, "rb")
@@ -111,13 +136,12 @@ class IdentityAnalysis:
     def _R_tree_analysis(self):
         information_file = open("R_information_file", "w")
         information_file.write(self.tree_figures_folder + "/")
-        
         subprocess.run(["Rscript", "../R_scripts/tree_maker.R"])
         
         current_working_directory = os.listdir(".")
         for file in current_working_directory:
             # NOTE: Mute here if you want to look at tree files. Might be necessary to delete some information.
-            if file.endswith("_tree.tree") or file == "R_information_file":
+            if file.endswith("_tree.tree") or file.endswith("_tree_protein.tree") or file == "R_information_file" or file.endswith(".tsv") or file.endswith(".wrangled"):
                 os.remove(file)
             if file.endswith("_Rfig.png"):
                 os.rename(file, self.tree_figures_folder + "/" + file)
