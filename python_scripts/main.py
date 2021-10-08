@@ -6,6 +6,7 @@ from file_extractor import FileExtractor
 from blast_analysis import BlastAnalysis
 from housekeeping_analysis import HousekeepingAnalysis
 from identity_analysis import IdentityAnalysis
+from organisation_analysis import OrganisationAnalysis
 
 config_parser = configparser.ConfigParser()
 config_parser.read("../config.ini")
@@ -37,7 +38,9 @@ class MainScript:
             #self._blast_analysis(gene)
             #print("extracting_housekeeping_genes")
             #self._housekeeping_analysis(gene)
-            self._identity_analysis(gene)
+            print("finding gene organisation")
+            self._organisation_analysis(gene)
+            #self._identity_analysis(gene)
 
     def _gbk_splitter_script(self):
         script_directory = os.listdir()
@@ -61,6 +64,11 @@ class MainScript:
         housekeeping_object.extract_genes()
         housekeeping_object.extract_proteins()
     
+    def _organisation_analysis(self, gene):
+        organisation_object = OrganisationAnalysis(gene, self.folder_name)
+        #organisation_object.extract_gene_organisation()
+        organisation_object.find_organisation()
+
     def _identity_analysis(self, gene):
         identity_object = IdentityAnalysis(gene, self.folder_name)
         #identity_object.blast_to_length_comparison()

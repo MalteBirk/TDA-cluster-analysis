@@ -1,7 +1,6 @@
 import os
 import configparser
 import subprocess
-#import matplotlib.pyplot as plt
 
 from blast_analysis import BlastAnalysis
 
@@ -136,6 +135,8 @@ class IdentityAnalysis:
     def _R_tree_analysis(self):
         information_file = open("R_information_file", "w")
         information_file.write(self.tree_figures_folder + "/")
+        # NOTE:!!! Try to remove | in R to get more informative trees.
+        # NOTE: !!! This will only work, since the metadata file keeps that part of the name.
         subprocess.run(["Rscript", "../R_scripts/tree_maker.R"])
         
         current_working_directory = os.listdir(".")

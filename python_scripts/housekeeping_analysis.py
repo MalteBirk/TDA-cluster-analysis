@@ -57,7 +57,6 @@ class HousekeepingAnalysis:
                         except:
                             print(line)
                             print(cds_file)
-                            count += 1
                             continue
                             #exit(1)
                         if gene_name.startswith("[gene="):
