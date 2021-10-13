@@ -39,10 +39,10 @@ class IdentityAnalysis:
 
     def tree_maker(self):
         self.blast_functions_object.check_directory_path(self.tree_figures_folder)
-        self._tree_figure_writer(self.gene_align_folder, "-nt")
+        #self._tree_figure_writer(self.gene_align_folder, "-nt")
         self._tree_figure_writer(self.protein_align_folder, None)
-        self._tree_figure_writer(self.aligned_housekeeping_path, "-nt")
-        self._tree_figure_writer(self.aligned_housekeeping_protein_path, None)
+        #self._tree_figure_writer(self.aligned_housekeeping_path, "-nt")
+        #self._tree_figure_writer(self.aligned_housekeeping_protein_path, None)
 
     def _tree_figure_writer(self, folder, data_type):
         alignments = os.listdir(folder)
@@ -73,14 +73,47 @@ class IdentityAnalysis:
                 data_frame = open(df_name + ".tsv", "w")
                 for tree_info in all_data:
                     name = "_".join(tree_info.split("_", 2)[:2])
+                    if "lcl" in tree_info:
+                        other_name = "".join(tree_info.split("_lcl", 1)[:1])
+                        last_of_name = "_".join(other_name.split("_", 2)[2:])
+                    else:
+                        other_name = "".join(tree_info.split(":", 1)[0])
+                        last_of_name = "_".join(other_name.split("_", 2)[2:])
                     tree_value = tree_info.split(":", 1)[1]
                     genus_name = name.replace(")","").replace("(","")
+                    combined_genus_name = genus_name + "_" + last_of_name
                     if tree_value.endswith(";") or tree_value.endswith("\n"):
-                        wrangled_tree_file.write(name + ":" + tree_value)
-                    else: 
-                        wrangled_tree_file.write(name + ":" + tree_value + ",")
-                    data_frame.write(genus_name + "\t" + genus_name.split("_")[0] + "\n")
-    
+                        wrangled_tree_file.write(name + "_" + last_of_name + ":" + tree_value)
+                    else:
+                        wrangled_tree_file.write(name + "_" + last_of_name + ":" + tree_value + ",")
+                    
+                    flag = False
+                    if flag == False:
+                        cluster_file = open("complete_cluster_list", "r")
+                        for line in cluster_file:
+                            if line.rstrip() == combined_genus_name:
+                                operon = "Complete"
+                                flag = True
+
+                    if flag == False:
+                        cluster_file = open("semi_complete_cluster_list", "r")
+                        for line in cluster_file:
+                            if line.rstrip() == combined_genus_name:
+                                operon = "SemiComplete"
+                                flag = True
+                    
+                    if flag == False:
+                        cluster_file = open("incomplete_cluster_list", "r")
+                        for line in cluster_file:
+                            if line.rstrip() == combined_genus_name:
+                                operon = "Incomplete"
+                                flag = True
+                    
+                    if flag == False:
+                        operon = "NA"
+
+                    data_frame.write(combined_genus_name + "\t" + genus_name.split("_")[0] + "\t" + operon + "\n")
+
     def _ref_gene_analyser(self, file_ending, folder, info_type):
         # NOTE: Something off with tdaA for proteins!!!!
         ref_gene = open(self.reference_folder + "/" + self.filename + file_ending, "rb")

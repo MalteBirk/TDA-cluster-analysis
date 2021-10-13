@@ -151,7 +151,7 @@ class OrganisationAnalysis:
                         break
                 if flag == True:
                     break
-            
+
             if found_on_same_contig == False:
                 incomplete_cluster_list.append([species_name, file, "NA"])
             elif opereon_length > int(self.length) * 5:
@@ -160,25 +160,31 @@ class OrganisationAnalysis:
                 semi_complete_cluster_list.append([species_name, file, opereon_length])
             else:
                 complete_cluster_list.append([species_name, file, opereon_length])
-        
+
         # For now, just species name.
         if os.path.exists("complete_cluster_list"):
             os.remove("complete_cluster_list")
         outfile = open("complete_cluster_list", "w")
+        outfile.write("species\n")
         for i in complete_cluster_list:
-            outfile.write(i[0] + "\n")
+            species_name = self._cluster_name_wrangler(i[0])
+            outfile.write(species_name + "\n")
         
         if os.path.exists("semi_complete_cluster_list"):
             os.remove("semi_complete_cluster_list")
         outfile = open("semi_complete_cluster_list", "w")
+        outfile.write("species\n")
         for i in semi_complete_cluster_list:
-            outfile.write(i[0] + "\n")
+            species_name = self._cluster_name_wrangler(i[0])
+            outfile.write(species_name + "\n")
         
         if os.path.exists("incomplete_cluster_list"):
             os.remove("incomplete_cluster_list")
         outfile = open("incomplete_cluster_list", "w")
+        outfile.write("species\n")
         for i in incomplete_cluster_list:
-            outfile.write(i[0] + "\n")
+            species_name = self._cluster_name_wrangler(i[0])
+            outfile.write(species_name + "\n")
     
     def _couple_finder(self, orientation):
         for i in range(0, len(self.name_and_pos_list), 2):
@@ -193,5 +199,11 @@ class OrganisationAnalysis:
                     continue
                 self.coupled.append([self.name_and_pos_list[i],self.name_and_pos_list[index - 1]])
     
+    def _cluster_name_wrangler(self, cluster):
+        species_name = cluster.split("_lcl")[0].replace(">","")
+        if "(" in species_name:
+            species_name = species_name.split("(")[0]
+        return species_name
+
     def overlap(self, list1, list2):
         return list(set(list1) & set(list2))

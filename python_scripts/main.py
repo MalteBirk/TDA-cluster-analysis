@@ -38,9 +38,10 @@ class MainScript:
             #self._blast_analysis(gene)
             #print("extracting_housekeeping_genes")
             #self._housekeeping_analysis(gene)
-            print("finding gene organisation")
-            self._organisation_analysis(gene)
-            #self._identity_analysis(gene)
+            #print("finding gene organisation")
+            #self._organisation_analysis(gene)
+            print("Doing identity analysis")
+            self._identity_analysis(gene)
 
     def _gbk_splitter_script(self):
         script_directory = os.listdir()

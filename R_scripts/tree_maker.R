@@ -32,7 +32,7 @@ for (name in all_tree_files_list)
   
   tipcategories = read.csv(tsv_file, 
                            sep = "\t",
-                           col.names = c("species", "genus_name"), 
+                           col.names = c("species", "genus_name", "operon"),
                            header = FALSE, 
                            stringsAsFactors = FALSE)
   
@@ -47,8 +47,10 @@ for (name in all_tree_files_list)
                 color = "black", # color for label font
                 geom = "label",  # labels not text
                 label.padding = unit(0.0001, "lines"), # amount of padding around the labels
-                label.size = 0)# size of label border
-  
+                label.size = 0) + # size of label border
+    geom_tippoint(aes(shape = operon, color = operon), size = 0.3, position = "identity") +
+    guides(shape = guide_legend(override.aes = list(size = 5)))
+
   ggsave(file=paste(result_path,figure_name,"_identity_tree_Rfig",".png",sep = ""), combined_plot, limitsize = FALSE)
 }
 
