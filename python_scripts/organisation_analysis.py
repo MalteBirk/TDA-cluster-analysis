@@ -78,8 +78,12 @@ class OrganisationAnalysis:
             larger_clusters = []
             for line in organisation_file:
                 line_list = line.split(" ")
-                # Will be second to last position.
-                gene_number = line_list[0].rsplit("_")[-2]
+                # Different wrangling of data result in specific case for Jyllinge strains
+                if line_list[0].startswith(">Jyllinge"):
+                    gene_number = line_list[0].rsplit("_")[-3].split(".")[0]
+                # Will be second to last position in normal cases
+                else:
+                    gene_number = line_list[0].rsplit("_")[-2]
                 contig = line_list[0].split("|")[1].split(".")[0]
                 species_name = line_list[0]
                 contig_list.append(contig)
@@ -105,10 +109,14 @@ class OrganisationAnalysis:
                 # NOTE: Figure out the ordering and get it right.
                 self.name_and_pos_list.append(line_list[-1].rstrip())
                 self.name_and_pos_list.append(gene_number)
-            #if file.startswith("GCF_900217825.1_IMG-taxon_2657245369"):
-        # Count all the contigs
+            
             if len(contig_list) > 0 :
-                found_on_same_contig = contig_list.count(contig_list[0]) == len(contig_list)
+                # Expects them to be on same contig from previous findings.
+                if line_list[0].startswith(">Jyllinge"):
+                    found_on_same_contig = True
+                else:
+                    found_on_same_contig = contig_list.count(contig_list[0]) == len(contig_list)
+
             opereon_length = int(max_num) - int(min_num)
 
             for i in range(0, len(self.name_and_pos_list), 2):
@@ -151,7 +159,7 @@ class OrganisationAnalysis:
                         break
                 if flag == True:
                     break
-
+            
             if found_on_same_contig == False:
                 incomplete_cluster_list.append([species_name, file, "NA"])
             elif opereon_length > int(self.length) * 5:
@@ -160,7 +168,7 @@ class OrganisationAnalysis:
                 semi_complete_cluster_list.append([species_name, file, opereon_length])
             else:
                 complete_cluster_list.append([species_name, file, opereon_length])
-
+        
         # For now, just species name.
         if os.path.exists("complete_cluster_list"):
             os.remove("complete_cluster_list")

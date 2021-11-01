@@ -31,18 +31,14 @@ class BlastAnalysis:
         filename = self.url.split("/")[-1]
         gene_name = filename.split(".")[0]
         # Make user able to change identity here later?
-        blast_statement = 'blastn  -perc_identity 50 -qcov_hsp_perc 50 -subject \
-                        '+ self.cds_folder +'/{} -query '+ self.reference_gene + gene_name + ".ffn"\
-                         +' -outfmt 6 -word_size 5 > '+ self.cds_blast_folder +'/{.}.blast'
+        blast_statement = 'blastn -perc_identity 50 -qcov_hsp_perc 50 -subject ' + self.cds_folder +'/{} -query '+ self.reference_gene + gene_name + ".ffn" +' -outfmt 6 -word_size 5 > '+ self.cds_blast_folder +'/{.}.blast'
         cds_list = subprocess.Popen(["ls", self.cds_folder], 
                                 stdout=subprocess.PIPE)
         # NOTE: Change the 12 to be altered in the config file.
         parallel_blast = subprocess.Popen(["parallel", "-j", "12",
                         blast_statement],
-                        stdin = cds_list.stdout, stderr=subprocess.DEVNULL)
+                        stdin = cds_list.stdout)
         parallel_blast.wait()
-        print("finished blastn")
-
         count = 0
         # Removes empties
         for file in os.listdir(self.cds_blast_folder):
@@ -66,7 +62,9 @@ class BlastAnalysis:
         
         parallel_blast = subprocess.Popen(["parallel", "-j", "12",
                         blast_statement],
-                        stdin = cds_list.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdin = cds_list.stdout)
+        print(cds_list)
+        #stdout=subprocess.PIPE, stderr=subprocess.PIPE
         parallel_blast.wait()
         print("finished blastp")
 

@@ -1,0 +1,6 @@
+name: cluster-analysis-environment
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+prefix: /home/maltebirk/miniconda3/envs/TDA-cluster-analysis
