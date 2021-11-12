@@ -46,16 +46,16 @@ class IdentityAnalysis:
         self.blast_functions_object.check_directory_path(self.tree_figures_folder)
         # MANUEL for now. Rscript messing up
         #self._tree_figure_writer(self.gene_align_folder, "-nt")
-        self._tree_figure_writer(self.protein_align_folder, None)
+        #self._tree_figure_writer(self.protein_align_folder, None)
         #self._tree_figure_writer(self.aligned_housekeeping_path, "-nt")
-        #self._tree_figure_writer(self.aligned_housekeeping_protein_path, None)
+        self._tree_figure_writer(self.aligned_housekeeping_protein_path, None)
 
     def blast_identity_to_operons(self):
         self._operon_plot("protein")
 
     def _tree_figure_writer(self, folder, data_type):
         alignments = os.listdir(folder)
-        """
+        
         for file in alignments:
             if data_type == "-nt":
                 tree_outfile = open(file.split(".")[0] + "_" + "tree" + ".tree", "wb")
@@ -65,7 +65,7 @@ class IdentityAnalysis:
                 tree_file = subprocess.run(["fasttree", "-quiet", folder + "/" + file], capture_output = True)
             tree_outfile.write(tree_file.stdout)
             tree_outfile.close()
-        """
+        
         
         self._tree_data_wrangler()
         self._R_tree_analysis()
@@ -96,10 +96,13 @@ class IdentityAnalysis:
                     genus_name = name.replace(")","").replace("(","")
                     combined_genus_name = genus_name + "_" + last_of_name
                     # For the weird case
+                    second_flag = False
                     if (name + "_" + last_of_name).startswith("Phaeobacter_italicus_strain_CECT_7645"):
                         last_of_name = last_of_name + "_" + str(count)
                         combined_genus_name = genus_name + "_" + last_of_name
                         count += 1
+                        operon = "Incomplete"
+                        second_flag = True
 
                     if tree_value.endswith(";") or tree_value.endswith("\n"):
                         wrangled_tree_file.write(name + "_" + last_of_name + ":" + tree_value)
@@ -107,6 +110,7 @@ class IdentityAnalysis:
                         wrangled_tree_file.write(name + "_" + last_of_name + ":" + tree_value + ",")
                     
                     flag = False
+
                     if flag == False:
                         cluster_file = open("complete_cluster_list", "r")
                         for line in cluster_file:
@@ -128,7 +132,8 @@ class IdentityAnalysis:
                                 operon = "Incomplete"
                                 flag = True
                     
-                    if flag == False:
+                    if flag == False and second_flag == False:
+                        print(combined_genus_name)
                         operon = "NA"
                     data_frame.write(combined_genus_name + "\t" + genus_name.split("_")[0] + "\t" + operon + "\n")
             

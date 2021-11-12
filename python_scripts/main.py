@@ -37,13 +37,12 @@ class MainScript:
                                + config_parser.get(gene, "organism_list").replace(",","_")
             #self._file_extractor(gene)
             #self._local_file_handler()
-        
             #print("starting_blast_analysis")
             #self._blast_analysis(gene)
             #print("extracting_housekeeping_genes")
             #self._housekeeping_analysis(gene)
-            print("finding gene organisation")
-            self._organisation_analysis(gene)
+            #print("finding gene organisation")
+            #self._organisation_analysis(gene)
             print("Doing identity analysis")
             self._identity_analysis(gene)
 
@@ -70,21 +69,25 @@ class MainScript:
                 translation = ""
                 locus_tag = ""
                 location = ""
+                gene = ""
                 for line in genbank_file:
                     if "ORIGIN" in line:
                         flag = False
                         if translation != "":
-                            outfile.write(">Jyllinge_" + locus_tag + " [location=" + location + "]" + "\n")
+                            outfile.write(">Jyllinge_" + locus_tag + " [gene=" + gene + "]" + " [location=" + location + "]" + "\n")
                             for i in range(0,len(translation),60):
                                 outfile.write(translation[i:i+60] + "\n")
                         translation = ""
                     if " CDS " in line:
                         if translation != "":
-                            outfile.write(">Jyllinge_" + locus_tag + " [location=" + location + "]" + "\n")
+                            outfile.write(">Jyllinge_" + locus_tag + " [gene=" + gene + "]" + " [location=" + location + "]" + "\n")
                             for i in range(0,len(translation),60):
                                 outfile.write(translation[i:i+60] + "\n")
                         location = line.split(" ")[-1].rstrip()
                         flag = False
+                        gene = ""
+                    if " /gene=" in line:
+                        gene = line.split("=")[-1].replace('"',"").rstrip()
                     if " /locus_tag=" in line:
                         locus_tag = line.split("=")[-1].replace('"',"").rstrip()
                         name = locus_tag.rsplit("_", 1)[0] + "_lcl|"
@@ -95,9 +98,8 @@ class MainScript:
                     if " /translation=" in line:
                         translation = line.split("=")[-1].replace('"',"").rstrip()
                         flag = True
-
                 if translation != "":
-                    outfile.write(">Jyllinge_" + locus_tag + " [location=" + location + "]" + "\n")
+                    outfile.write(">Jyllinge_" + locus_tag + " [gene=" + gene + "]" + " [location=" + location + "]" + "\n")
                     for i in range(0,len(translation),60):
                         outfile.write(translation[i:i+60] + "\n")
 
@@ -120,8 +122,10 @@ class MainScript:
     
     def _housekeeping_analysis(self, gene):
         housekeeping_object = HousekeepingAnalysis(gene, self.folder_name)
-        housekeeping_object.extract_genes()
+        #housekeeping_object.extract_genes()
         housekeeping_object.extract_proteins()
+        #housekeeping_object.protein_blast()
+        #housekeeping_object.extract_housekeeping_protein()
     
     def _organisation_analysis(self, gene):
         organisation_object = OrganisationAnalysis(gene, self.folder_name)
@@ -130,9 +134,9 @@ class MainScript:
 
     def _identity_analysis(self, gene):
         identity_object = IdentityAnalysis(gene, self.folder_name)
-        identity_object.blast_to_length_comparison()
-        #identity_object.tree_maker()
-        identity_object.blast_identity_to_operons()
+        #identity_object.blast_to_length_comparison()
+        identity_object.tree_maker()
+        #identity_object.blast_identity_to_operons()
 
 
 if __name__ == "__main__":

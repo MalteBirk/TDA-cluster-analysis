@@ -15,6 +15,9 @@ class HousekeepingAnalysis:
         self.folder_name = folder_name
         self.blast_functions_object = BlastAnalysis(self.gene, self.folder_name)
 
+        self.reference_gene = "../"+"reference"+self.gene + "/"
+        self.url = config_parser.get(self.gene, "mibig_url")
+
         folder_name = folder_name.split("/")
         self.housekeeping_list = config_parser.get(self.gene, "housekeeping_genes").split(",")
         self.extracted_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "extracted_housekeeping_genes")
@@ -22,6 +25,7 @@ class HousekeepingAnalysis:
         self.extracted_protein_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "extracted_housekeeping_proteins")
         self.aligned_protein_path = self.blast_functions_object.directory_formatter(self.gene + "_" + "aligned_housekeeping_proteins")
         
+        self.housekeeping_protein_blast_folder = self.blast_functions_object.directory_formatter(gene + "_" + "Housekeeping_Protein_Blast")
         self.cds_folder = self.blast_functions_object.directory_formatter("cds_fasta" + "_" + folder_name[-1])
         self.protein_cds_folder = self.blast_functions_object.directory_formatter("protein_cds_fasta" + "_" + folder_name[-1])
 
@@ -118,7 +122,6 @@ class HousekeepingAnalysis:
                             flag = False
                     elif flag == True:
                         fs[housekeeping_number_list[file_position]].write(line)
-                
                 infile.close()
         
         finally:
@@ -128,7 +131,7 @@ class HousekeepingAnalysis:
         housekeeping_files = os.listdir(self.extracted_protein_path)
         for file in housekeeping_files:
             self.alignment(self.extracted_protein_path + "/" + file, self.aligned_protein_path, file)
-    
+
     def alignment(self, path, second_location, gene_name):
         alignment = subprocess.run(["mafft", "--quiet", "--adjustdirection", path], capture_output=True)
         alignment_file = open(second_location + "/" + gene_name + ".aln", "wb")
