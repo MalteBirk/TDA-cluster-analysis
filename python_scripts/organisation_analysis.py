@@ -1,7 +1,6 @@
 import os
 import configparser
 import subprocess
-#import matplotlib.pyplot as plt
 
 from blast_analysis import BlastAnalysis
 
@@ -105,11 +104,46 @@ class OrganisationAnalysis:
                             if max(location_of_gene) > max_num:
                                 max_num = max(location_of_gene)
                 
-                
+            
                 # NOTE: Figure out the ordering and get it right.
                 self.name_and_pos_list.append(line_list[-1].rstrip())
                 self.name_and_pos_list.append(gene_number)
-            
+            """
+            if "jeotgali" in line_list[0] or "Jyllinge_JH86b" in line_list[0] or "DSM_41" in line_list[0] or "NBRC_102528" in line_list[0]:
+                #print("__________")
+                #print(self.name_and_pos_list)
+                #print(line)
+                #print(gene_number)
+                #print(contig_list)
+                #print(self.name_and_pos_list)
+                #print("operon length", int(max_num) - int(min_num))
+                ordered_together = False
+                prev_num = 0
+                for i in self.name_and_pos_list:
+                    if i.isnumeric():
+                        number = i
+                        if prev_num != 0:
+                            if int(number)-int(prev_num) == 1 or int(number)-int(prev_num) == -1:
+                                print(int(number)-int(prev_num))
+                                ordered_together = True
+                            else:
+                                print(int(number)-int(prev_num))
+                                ordered_together = False
+                                break
+            """              
+            ordered_together = False
+            prev_num = 0
+            for i in self.name_and_pos_list:
+                if i.isnumeric():
+                    number = i
+                    if prev_num != 0:
+                        if int(number)-int(prev_num) == 1 or int(number)-int(prev_num) == -1:
+                            ordered_together = True
+                        else:
+                            ordered_together = False
+                            break
+                    prev_num = number
+
             if len(contig_list) > 0 :
                 # Expects them to be on same contig from previous findings.
                 if line_list[0].startswith(">Jyllinge"):
@@ -160,6 +194,52 @@ class OrganisationAnalysis:
                 if flag == True:
                     break
             
+            # Iterates over all in self.coupled 
+            #if "DSM_41" in line_list[0] or "NBRC_102528" in line_list[0] or "Contig_122" in line_list[0]:
+            couple_list = []
+            if self.coupled != [] and only_uniques_clusters != []:
+                for unique_couples in only_uniques_clusters:
+                    for couples in self.coupled:
+                        couple = []
+                        not_found = False
+                        for single in couples:
+                            if single in unique_couples:
+                                couple.append(single)
+                                not_found = True
+                            else:
+                                couple.append(single)
+                        couple.append(not_found)
+                        couple_list.append(couple)
+            for i in couple_list:
+                if False in i:
+                    missing = False
+                    for j in i[:-1]:
+                        for unique_couples in only_uniques_clusters:
+                            if j in unique_couples:
+                                missing = False
+                                break
+                            else:
+                                missing = True
+                    if missing == True:
+                        only_uniques_clusters.append(i[:-1])
+
+            """
+            if "DSM_41" in line_list[0] or "NBRC_102528" in line_list[0] or "Contig_122" in line_list[0] or "DSM_104981" in line_list[0] or "size212360" in line_list[0] or "1011MAR3C25" in line_list[0]:
+                print("")
+                print("-----------------------------------")
+                print(line_list[0])
+                print("coupled", self.coupled)
+                print(overlap)
+                print(larger_clusters)
+                print("gene list", gene_list)
+                #print(reduced_cluster)
+                print("only_unique", only_uniques_clusters)
+                print("...................................")
+                print(found_on_same_contig)
+                print(opereon_length)
+                #print(only_uniques_clusters)
+                print(ordered_together)
+            """
             if found_on_same_contig == False:
                 incomplete_cluster_list.append([species_name, file, "NA"])
             elif opereon_length > int(self.length) * 5:
@@ -167,7 +247,10 @@ class OrganisationAnalysis:
             elif len(only_uniques_clusters) > 1:
                 semi_complete_cluster_list.append([species_name, file, opereon_length])
             else:
-                complete_cluster_list.append([species_name, file, opereon_length])
+                if ordered_together == False:
+                    incomplete_cluster_list.append([species_name, file, opereon_length])
+                else:
+                    complete_cluster_list.append([species_name, file, opereon_length])
         
         # For now, just species name.
         if os.path.exists("complete_cluster_list"):

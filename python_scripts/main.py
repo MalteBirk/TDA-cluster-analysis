@@ -35,14 +35,14 @@ class MainScript:
             self.folder_name = "../Results/" + config_parser.get(gene, "gene_name") + "/" + \
                                config_parser.get(gene, "gene_name") + "_" \
                                + config_parser.get(gene, "organism_list").replace(",","_")
-            #self._file_extractor(gene)
-            #self._local_file_handler()
-            #print("starting_blast_analysis")
-            #self._blast_analysis(gene)
-            #print("extracting_housekeeping_genes")
-            #self._housekeeping_analysis(gene)
-            #print("finding gene organisation")
-            #self._organisation_analysis(gene)
+            self._file_extractor(gene)
+            self._local_file_handler()
+            print("starting_blast_analysis")
+            self._blast_analysis(gene)
+            print("extracting_housekeeping_genes")
+            self._housekeeping_analysis(gene)
+            print("finding gene organisation")
+            self._organisation_analysis(gene)
             print("Doing identity analysis")
             self._identity_analysis(gene)
 
@@ -122,21 +122,21 @@ class MainScript:
     
     def _housekeeping_analysis(self, gene):
         housekeeping_object = HousekeepingAnalysis(gene, self.folder_name)
-        #housekeeping_object.extract_genes()
+        housekeeping_object.extract_genes()
         housekeeping_object.extract_proteins()
-        #housekeeping_object.protein_blast()
-        #housekeeping_object.extract_housekeeping_protein()
+        housekeeping_object.protein_blast()
+        housekeeping_object.extract_housekeeping_protein()
     
     def _organisation_analysis(self, gene):
         organisation_object = OrganisationAnalysis(gene, self.folder_name)
-        #organisation_object.extract_gene_organisation()
+        organisation_object.extract_gene_organisation()
         organisation_object.find_organisation()
 
     def _identity_analysis(self, gene):
         identity_object = IdentityAnalysis(gene, self.folder_name)
-        #identity_object.blast_to_length_comparison()
+        identity_object.blast_to_length_comparison()
         identity_object.tree_maker()
-        #identity_object.blast_identity_to_operons()
+        identity_object.blast_identity_to_operons()
 
 
 if __name__ == "__main__":

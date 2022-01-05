@@ -1,5 +1,5 @@
 # Maybe setenv for xml2
-packages <- c("xml2","rvest","tidyverse", "BiocManager", "ggtree", "beeswarm", "ggbeeswarm", "ggplot2")
+packages <- c("xml2","rvest","tidyverse", "BiocManager", "ggtree", "beeswarm", "ggbeeswarm", "ggplot2", "viridis")
 # Function to check whether package is installed
 is.installed <- function(mypkg){
   is.element(mypkg, installed.packages()[,1])
@@ -20,16 +20,19 @@ library("beeswarm")
 library("ggbeeswarm")
 library("ggplot2")
 library("ape")
+library("viridis")
 setwd(getwd())
 # Saves all data frames and information about where to write PNG's
 paste(getwd())
 all_tree_files = list.files("../python_scripts", pattern = "_tree.wrangled")
 all_tree_files_list = as.list(strsplit(all_tree_files, '\\s+'))
 result_path <- readLines(paste("../python_scripts", "/R_information_file", sep = ""))
-exclude_list <- readLines(paste("../python_scripts", "/exclude_list.txt", sep = ""))
+
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 for (name in all_tree_files_list)
   {
+  exclude_list <- readLines(paste("../python_scripts", "/exclude_list.txt", sep = ""))
   figure_name = strsplit(name, split = "_")
   figure_name <- sapply(figure_name, function(x) x[1:2])
   figure_name = figure_name[1]
@@ -55,6 +58,7 @@ for (name in all_tree_files_list)
                 geom = "label",  # labels not text
                 label.padding = unit(0.0001, "lines"), # amount of padding around the labels
                 label.size = 0, align = TRUE, linetype = "dashed")
+                #scale_fill_manual(values=cbPalette))
     #theme(legend.position = "none")
     #geom_tippoint(aes(color = operon), 
       #           size=0.8) +
@@ -68,13 +72,20 @@ for (name in all_tree_files_list)
     # guides(shape = guide_legend(override.aes = list(size = 5)))
   #combined_plot
   
-  heatmap_plot <- gheatmap(combined_plot, META[c(3,4)],width = .08, offset = 0.7  ,
+  heatmap_plot <- gheatmap(combined_plot, META[c(3,4)],width = .08, offset = 0.4  ,
            color = "black", colnames = F) + theme(legend.position = "none")
 
+  #heatmap_plot
+  
   ggsave(file=paste(result_path,figure_name,"_heatmap_identity_tree_Rfig",".png",sep = ""), heatmap_plot, limitsize = FALSE, width = 11, height = 12)
 
   ###################################################### 
   # For trimmed tree
+  #figure_name
+  if (figure_name == "tdaBProtein") {
+    exclude_list <- readLines(paste("../python_scripts", "/exclude_list_B.txt", sep = ""))
+  }
+  # exclude_list <- readLines(paste("../python_scripts", "/exclude_list_B.txt", sep = ""))
   trimmed_tree <- drop.tip(tree, exclude_list)
   plotted_tree = ggtree(trimmed_tree) + geom_treescale()
   
@@ -86,9 +97,9 @@ for (name in all_tree_files_list)
                 geom = "label",  # labels not text
                 label.padding = unit(0.0001, "lines"), # amount of padding around the labels
                 label.size = 0, align = TRUE, linetype = "dashed")
-  heatmap_plot <- gheatmap(combined_plot, META[c(3,4)],width = .08, offset = 2  ,
+  heatmap_plot <- gheatmap(combined_plot, META[c(3,4)],width = .08, offset = 0.8  ,
                            color = "black", colnames = F) + theme(legend.position = "none")
-  
+  # dobbel check
   ggsave(file=paste(result_path,figure_name,"_trimmed_heatmap_identity_tree_Rfig",".png",sep = ""), heatmap_plot, limitsize = FALSE, width = 11, height = 12)
   
   }
@@ -110,15 +121,19 @@ for (name in all_data_frames)
   figure_name = figure_name[1]
   tipcategories = read.csv(paste("../python_scripts/",name, sep = ""), 
                            sep = "\t",
-                           col.names = c("species", "genus_name", "BLAST_identity", "cluster"),
+                           col.names = c("species", "genus_name", "percentage_protein_BLAST_identity", "cluster"),
                            header = FALSE, 
                            stringsAsFactors = FALSE)
   identity_frame = as.data.frame(tipcategories)
   #beeswarm(identity_frame["operon"] ~ identity_frame["identity"], pch = 19, corral = "wrap")
   
-  beeswarm = ggplot(identity_frame, aes(x = cluster, y = BLAST_identity, color = genus_name)) +
-    geom_beeswarm(cex = 0.55) + ggtitle(figure_name)
-  ggsave(file=paste(path_to_figure_folder,figure_name,"_beeswarm",".png",sep = ""), beeswarm, limitsize = FALSE, width = 13, height = 8)
+  beeswarm = ggplot(identity_frame, aes(x = cluster, y = percentage_protein_BLAST_identity, color = genus_name)) +
+    geom_beeswarm(cex = 0.55) + 
+    ggtitle(figure_name) + 
+    theme(legend.key.size = unit(1.2, 'cm'), #change legend key size
+          legend.title = element_text(size=14),
+          legend.text = element_text(size=12))
+  ggsave(file=paste(path_to_figure_folder,figure_name,"_beeswarm",".png",sep = ""), beeswarm, limitsize = FALSE, width = 13, height = 10)
   
   #identity = identity_frame["identity"]
   #group = c("Complete")

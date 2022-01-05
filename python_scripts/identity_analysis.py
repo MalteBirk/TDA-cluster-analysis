@@ -44,10 +44,10 @@ class IdentityAnalysis:
 
     def tree_maker(self):
         self.blast_functions_object.check_directory_path(self.tree_figures_folder)
-        # MANUEL for now. Rscript messing up
-        #self._tree_figure_writer(self.gene_align_folder, "-nt")
-        #self._tree_figure_writer(self.protein_align_folder, None)
-        #self._tree_figure_writer(self.aligned_housekeeping_path, "-nt")
+        # MANUAL for now. Rscript messing up
+        self._tree_figure_writer(self.gene_align_folder, "-nt")
+        self._tree_figure_writer(self.protein_align_folder, None)
+        self._tree_figure_writer(self.aligned_housekeeping_path, "-nt")
         self._tree_figure_writer(self.aligned_housekeeping_protein_path, None)
 
     def blast_identity_to_operons(self):
@@ -65,7 +65,6 @@ class IdentityAnalysis:
                 tree_file = subprocess.run(["fasttree", "-quiet", folder + "/" + file], capture_output = True)
             tree_outfile.write(tree_file.stdout)
             tree_outfile.close()
-        
         
         self._tree_data_wrangler()
         self._R_tree_analysis()
@@ -226,7 +225,7 @@ class IdentityAnalysis:
         # NOTE:!!! Try to remove | in R to get more informative trees.
         # NOTE: !!! This will only work, since the metadata file keeps that part of the name.
         #subprocess.run(["Rscript", "../R_scripts/tree_maker.R"])
-        exit(1)
+        """
         current_working_directory = os.listdir(".")
         for file in current_working_directory:
             # NOTE: Mute here if you want to look at tree files. Might be necessary to delete some information.
@@ -234,6 +233,7 @@ class IdentityAnalysis:
                 os.remove(file)
             if file.endswith("_Rfig.png"):
                 os.rename(file, self.tree_figures_folder + "/" + file)
+        """
 
     def _operon_plot(self, type):
         all_files = os.listdir()
@@ -249,21 +249,16 @@ class IdentityAnalysis:
                     for line in operon_file:
                         operon_frame.append(line)
             for line in data_frame:
-                #print(line)
                 identity = line.split("\t")[1]
                 name = line.split("\t")[4].split("_lcl")[0]
                 genus = line.split("\t")[3]
                     
                 for entry in operon_frame:
-                   # print(entry.split("\t")[0])
-                    #if entry.split("\t")[0] == "Phaeobacter_inhibens_2.10" and name == "Phaeobacter_inhibens_2.10":
-                    #    print("my name", name)
-                    #    print("entry", entry.split("\t")[0])
                     if entry.split("\t")[0] == name:
                         operon = entry.split("\t")[2]
-                        #print(entry.split("\t")[0])
-                        #print(operon)
-                        
+                if "Phaeobacter_italicus_strain_CECT_7645" in name:
+                        operon = "Incomplete"
+                          
                 new_data_frame.write(name + "\t" + genus + "\t" + identity + "\t" + operon + "\n")        
 
             data_frame.close()
